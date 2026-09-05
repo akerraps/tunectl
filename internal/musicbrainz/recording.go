@@ -47,7 +47,7 @@ func enrichTrack(info *types.TrackInfo, resp *gomusicbrainz.RecordingSearchRespo
 			return err
 		}
 	}
-	
+
 	if err := getArtistInfo(info); err != nil {
 		return err
 	}

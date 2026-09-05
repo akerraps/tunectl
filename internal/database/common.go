@@ -18,4 +18,12 @@ func WriteDatabase(song *types.TrackInfo) {
 			"err", err,
 		)
 	}
+
+	err = WriteArtist(song)
+	if err != nil {
+		log.Error(
+			"failed to write artist to database",
+			"err", err,
+		)
+	}
 }
