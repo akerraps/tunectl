@@ -3,7 +3,6 @@ services:
     build:
       context: ..
       dockerfile: .devcontainer/Dockerfile
-    container_name: tunectl-dev
     volumes:
       - ..:/workspaces/tunectl
       - ~/.gitconfig:/home/vscode/.gitconfig:ro
