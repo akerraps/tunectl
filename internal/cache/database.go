@@ -14,7 +14,7 @@ func OpenDatabase() (*sql.DB, error) {
 	if err != nil {
 		return nil, fmt.Errorf("cannot get cache path: %w", err)
 	}
-	
+
 	dbPath := filepath.Join(cachePath, "tunectl.sqlite")
 
 	db, err := sql.Open("sqlite", dbPath)
@@ -77,10 +77,12 @@ func initDatabase(db *sql.DB) (err error) {
 	_, err = db.ExecContext(ctx, `
 		CREATE TABLE IF NOT EXISTS songs (
 			id INTEGER PRIMARY KEY AUTOINCREMENT, 
-			album_id INTEGER,
 			title TEXT NOT NULL, 
-			mbid TEXT NOT NULL,
-			FOREIGN KEY (album_id) REFERENCES albums(id) ON DELETE CASCADE
+			mbid TEXT NOT NULL UNIQUE,
+			album_id INTEGER,
+			artist_id INTEGER,
+			FOREIGN KEY (album_id) REFERENCES albums(id) ON DELETE CASCADE,
+			FOREIGN KEY (artist_id) REFERENCES artists(id) ON DELETE SET NULL
 		);
 	`)
 	if err != nil {
