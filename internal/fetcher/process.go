@@ -8,6 +8,7 @@ import (
 	"strings"
 	"unicode"
 
+	"akerraps/tunectl/internal/database"
 	"akerraps/tunectl/internal/musicbrainz"
 	"akerraps/tunectl/internal/types"
 
@@ -94,7 +95,7 @@ func processTrack(bin string, song types.TrackInfo, opts types.Options) error {
 
 	cmd := exec.Command(
 		bin,
-		"--extractor-args", "youtube:player_client=web_embedded",
+		//"--extractor-args", "youtube:player_client=web_embedded",
 		"-x",
 		"--restrict-filenames",
 		"--quiet",
@@ -121,6 +122,8 @@ func processTrack(bin string, song types.TrackInfo, opts types.Options) error {
 	log.Info("download completed")
 
 	writeMetadata(output, &song)
+
+	database.WriteDatabase(&song)
 
 	return nil
 }

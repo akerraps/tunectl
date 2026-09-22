@@ -64,10 +64,10 @@ func initDatabase(db *sql.DB) (err error) {
 	_, err = db.ExecContext(ctx, `
 		CREATE TABLE IF NOT EXISTS albums (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			artist_id INTEGER NOT NULL,
 			name TEXT NOT NULL,
-			album_mbid TEXT NOT NULL UNIQUE,
-			FOREIGN KEY (artist_id) REFERENCES artists(id) ON DELETE CASCADE
+			album_mbid TEXT UNIQUE,
+			artist_id INTEGER,
+			FOREIGN KEY (artist_id) REFERENCES artists(id) ON DELETE SET NULL
 		);
 	`)
 	if err != nil {
@@ -78,11 +78,9 @@ func initDatabase(db *sql.DB) (err error) {
 		CREATE TABLE IF NOT EXISTS songs (
 			id INTEGER PRIMARY KEY AUTOINCREMENT, 
 			title TEXT NOT NULL, 
-			mbid TEXT NOT NULL UNIQUE,
+			mbid TEXT UNIQUE,
 			album_id INTEGER,
-			artist_id INTEGER,
-			FOREIGN KEY (album_id) REFERENCES albums(id) ON DELETE CASCADE,
-			FOREIGN KEY (artist_id) REFERENCES artists(id) ON DELETE SET NULL
+			FOREIGN KEY (album_id) REFERENCES albums(id) ON DELETE CASCADE
 		);
 	`)
 	if err != nil {

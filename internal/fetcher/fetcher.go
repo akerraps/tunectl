@@ -8,7 +8,6 @@ import (
 	"sync/atomic"
 
 	"akerraps/tunectl/internal/cache"
-	"akerraps/tunectl/internal/database"
 	"akerraps/tunectl/internal/types"
 )
 
@@ -72,8 +71,6 @@ func FetchAudio(tracks []types.TrackInfo, opts types.Options) error {
 						"err", err,
 					)
 				}
-
-				database.WriteDatabase(&song)
 
 				current := int(completed.Add(1))
 				remaining := total - current
