@@ -44,7 +44,7 @@ func outputPath(song *types.TrackInfo, outputDir string) string {
 
 	var artist string
 	if len(song.Artists) > 0 {
-		artist = sanitize(song.Artists[0])
+		artist = song.Artists[0]
 	}
 
 	album := sanitize(song.Album)

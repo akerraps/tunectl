@@ -47,7 +47,7 @@ The provided `Dockerfile` uses a multi-stage build. The first stage clones the r
 Build the image locally:
 
 ```bash
-docker build -t tunectl .
+docker build --no-cache -t tunectl .
 ```
 
 The repository and version can be customized using build arguments:
