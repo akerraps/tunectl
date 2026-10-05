@@ -8,6 +8,7 @@ import (
 	"sync/atomic"
 
 	"akerraps/tunectl/internal/cache"
+	"akerraps/tunectl/internal/database"
 	"akerraps/tunectl/internal/types"
 )
 
@@ -65,11 +66,16 @@ func FetchAudio(tracks []types.TrackInfo, opts types.Options) error {
 
 				log.Debug("processing track")
 
-				if err := processTrack(bin, song, opts); err != nil {
+				if err := processTrack(bin, &song, opts); err != nil {
 					log.Error(
 						"failed to process track",
 						"err", err,
 					)
+				}
+
+				err = database.WriteDatabase(&song)
+				if err != nil {
+					log.Error("unable to write cache", "err", err)
 				}
 
 				current := int(completed.Add(1))

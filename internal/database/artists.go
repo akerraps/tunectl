@@ -1,26 +1,23 @@
 package database
 
 import (
-	"akerraps/tunectl/internal/cache"
 	"akerraps/tunectl/internal/types"
 	"context"
+	"database/sql"
 )
 
-func WriteArtist (song *types.TrackInfo) (err error) {
-	
-	db,err:=cache.OpenDatabase()
-	if err != nil {
-		return  err
-	}
+func WriteArtist(song *types.TrackInfo) (err error) {
 
-	for _, artist := range song.Artists {
-		_, err = db.ExecContext(context.Background(),
-			`INSERT INTO artists (name) VALUES (?);`,
-			artist)
-		if err != nil {
-			return err
+	return ExecTx(context.Background(), func(tx *sql.Tx) error {
+		for _, artist := range song.Artists {
+			_, err := tx.ExecContext(context.Background(),
+				`INSERT INTO artists (name) VALUES (?)
+				ON CONFLICT DO NOTHING;`,
+				artist)
+			if err != nil {
+				return err
+			}
 		}
-	}
-	
-	return nil
+		return nil
+	})
 }

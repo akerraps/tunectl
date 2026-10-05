@@ -8,14 +8,13 @@ import (
 	"strings"
 	"unicode"
 
-	"akerraps/tunectl/internal/database"
 	"akerraps/tunectl/internal/musicbrainz"
 	"akerraps/tunectl/internal/types"
 
 	"golang.org/x/text/unicode/norm"
 )
 
-func outputPath(song types.TrackInfo, outputDir string) string {
+func outputPath(song *types.TrackInfo, outputDir string) string {
 	name := song.Title + "_" + song.Artists[0]
 
 	name = norm.NFD.String(name)
@@ -38,7 +37,7 @@ func outputPath(song types.TrackInfo, outputDir string) string {
 	return filepath.Join(outputDir, name+".mp3")
 }
 
-func processTrack(bin string, song types.TrackInfo, opts types.Options) error {
+func processTrack(bin string, song *types.TrackInfo, opts types.Options) error {
 	log := slog.With(
 		"track_id", song.ID,
 		"title", song.Title,
@@ -66,7 +65,7 @@ func processTrack(bin string, song types.TrackInfo, opts types.Options) error {
 	if !opts.NoAPI {
 		log.Debug("fetching metadata from api")
 
-		if err := musicbrainz.GetSongInfo(&song); err != nil {
+		if err := musicbrainz.GetSongInfo(song); err != nil {
 			log.Warn(
 				"failed to fetch metadata, using original data",
 				"err", err,
@@ -76,7 +75,7 @@ func processTrack(bin string, song types.TrackInfo, opts types.Options) error {
 
 	// Existing song: only rewrite metadata.
 	if exists {
-		writeMetadata(output, &song)
+		writeMetadata(output, song)
 
 		log.Info("metadata rewritten")
 		return nil
@@ -121,9 +120,7 @@ func processTrack(bin string, song types.TrackInfo, opts types.Options) error {
 
 	log.Info("download completed")
 
-	writeMetadata(output, &song)
-
-	database.WriteDatabase(&song)
+	writeMetadata(output, song)
 
 	return nil
 }
