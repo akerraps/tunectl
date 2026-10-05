@@ -14,14 +14,12 @@ import (
 	"golang.org/x/text/unicode/norm"
 )
 
-func outputPath(song *types.TrackInfo, outputDir string) string {
-	name := song.Title + "_" + song.Artists[0]
-
-	name = norm.NFD.String(name)
+func sanitize(s string) string {
+	s = norm.NFD.String(s)
 
 	var b strings.Builder
 
-	for _, r := range name {
+	for _, r := range s {
 		if unicode.Is(unicode.Mn, r) {
 			continue
 		}
@@ -31,10 +29,34 @@ func outputPath(song *types.TrackInfo, outputDir string) string {
 		}
 	}
 
-	name = strings.ToLower(b.String())
-	name = strings.ReplaceAll(name, " ", "_")
+	s = strings.ToLower(strings.TrimSpace(b.String()))
 
-	return filepath.Join(outputDir, name+".mp3")
+	return strings.ReplaceAll(s, " ", "_")
+}
+
+func outputPath(song *types.TrackInfo, outputDir string) string {
+	name := song.Title
+	if len(song.Artists) > 0 {
+		name += "_" + song.Artists[0]
+	}
+
+	fileName := sanitize(name) + ".mp3"
+
+	var artist string
+	if len(song.Artists) > 0 {
+		artist = sanitize(song.Artists[0])
+	}
+
+	album := sanitize(song.Album)
+
+	switch {
+	case artist == "":
+		return filepath.Join(outputDir, "unknown", fileName)
+	case album == "":
+		return filepath.Join(outputDir, artist, "unknown", fileName)
+	default:
+		return filepath.Join(outputDir, artist, album, fileName)
+	}
 }
 
 func processTrack(bin string, song *types.TrackInfo, opts types.Options) error {
