@@ -14,7 +14,7 @@ func searchQuery(song string, artists []string) (query string) {
 	if len(artists) == 0 {
 		query = fmt.Sprintf(`recording:"%s"`, song)
 	} else {
-		query = fmt.Sprintf(`recording:"%s" AND artist:%s`, song, artists[0])
+		query = fmt.Sprintf(`recording:%s AND artist:%s`, song, artists[0])
 	}
 
 	return query

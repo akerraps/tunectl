@@ -47,15 +47,13 @@ func outputPath(song *types.TrackInfo, outputDir string) string {
 		artist = song.Artists[0]
 	}
 
-	album := sanitize(song.Album)
-
 	switch {
 	case artist == "":
 		return filepath.Join(outputDir, "unknown", fileName)
-	case album == "":
+	case song.Album == "":
 		return filepath.Join(outputDir, artist, "unknown", fileName)
 	default:
-		return filepath.Join(outputDir, artist, album, fileName)
+		return filepath.Join(outputDir, artist, song.Album, fileName)
 	}
 }
 
