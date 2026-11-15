@@ -120,7 +120,7 @@ Configuration priority:
 | `--output`           | `-o`  | Output directory                                     | `~/Music` |
 | `--no-api`           |       | Disable MusicBrainz metadata lookup                  | `false`   |
 | `--rewrite-metadata` |       | Rewrite metadata of existing songs using MusicBrainz | `false`   |
-| `--paralelism`       | `-n`  | Number of parallel downloads                         | `1`       |
+| `--parallelism`      | `-n`  | Number of parallel downloads                         | `1`       |
 
 ## Download songs
 
@@ -281,17 +281,34 @@ Example:
 
 ## Cache
 
-`tunectl` automatically downloads and caches the `yt-dlp` binary.
+`tunectl` keeps two local caches under `~/.cache/tunectl/`:
 
-Clear the cached binary with:
+- The `yt-dlp` binary, downloaded automatically on first use.
+- A SQLite database with metadata resolved from MusicBrainz (artists, albums, songs and genres).
+
+The metadata database is used to avoid hitting the MusicBrainz API again for an artist that has already been resolved: once an artist's genres are cached, subsequent songs by that artist skip the MusicBrainz artist lookup and reuse the cached genres.
+
+Clear the cached `yt-dlp` binary with:
 
 ```bash
-    tunectl cache --clear
+    tunectl cache --ytdlp
 ```
 
-The next execution will download `yt-dlp` again.
+The next execution will download `yt-dlp` again. This can be useful if the cached binary is corrupted or outdated.
 
-This can be useful if the cached binary is corrupted or outdated.
+Clear the cached metadata database with:
+
+```bash
+    tunectl cache --db
+```
+
+The next execution will re-fetch metadata from MusicBrainz for every artist. This can be useful to pick up updated genre tags.
+
+Both flags can be combined to clear everything at once:
+
+```bash
+    tunectl cache --ytdlp --db
+```
 
 ## Debugging
 
@@ -324,8 +341,9 @@ Download songs from a CSV or JSON file.
 
 ### `cache`
 
-Manage the local `yt-dlp` cache.
+Manage the local caches: the `yt-dlp` binary and the MusicBrainz metadata database.
 
 ```bash
-    tunectl cache --clear
+    tunectl cache --ytdlp
+    tunectl cache --db
 ```
