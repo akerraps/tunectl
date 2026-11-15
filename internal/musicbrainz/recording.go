@@ -5,11 +5,14 @@ import (
 	"log/slog"
 	"time"
 
-	"akerraps/tunectl/internal/database"
 	"akerraps/tunectl/internal/types"
 
 	"github.com/michiwend/gomusicbrainz"
 )
+
+// ArtistGenreLookup resolves genres already known for an artist, so callers
+// can skip the MusicBrainz artist lookup when the data is already cached.
+type ArtistGenreLookup func(artist string) (genres []string, found bool, err error)
 
 func searchQuery(song string, artists []string) (query string) {
 	if len(artists) == 0 {
@@ -21,7 +24,7 @@ func searchQuery(song string, artists []string) (query string) {
 	return query
 }
 
-func enrichTrack(info *types.TrackInfo, resp *gomusicbrainz.RecordingSearchResponse) error {
+func enrichTrack(info *types.TrackInfo, resp *gomusicbrainz.RecordingSearchResponse, lookupArtistGenres ArtistGenreLookup) error {
 	log := slog.With(
 		"track_id", info.ID,
 		"title", info.Title,
@@ -49,9 +52,16 @@ func enrichTrack(info *types.TrackInfo, resp *gomusicbrainz.RecordingSearchRespo
 		}
 	}
 
-	genres, found, err := database.GetArtistGenres(info.Artists[0])
-	if err != nil {
-		log.Warn("failed to check artist cache", "artist", info.Artists[0], "err", err)
+	var genres []string
+	var found bool
+
+	if lookupArtistGenres != nil {
+		var err error
+
+		genres, found, err = lookupArtistGenres(info.Artists[0])
+		if err != nil {
+			log.Warn("failed to check artist cache", "artist", info.Artists[0], "err", err)
+		}
 	}
 
 	if found {
@@ -77,7 +87,7 @@ func enrichTrack(info *types.TrackInfo, resp *gomusicbrainz.RecordingSearchRespo
 	return nil
 }
 
-func GetSongInfo(song *types.TrackInfo) error {
+func GetSongInfo(song *types.TrackInfo, lookupArtistGenres ArtistGenreLookup) error {
 	log := slog.With(
 		"track_id", song.ID,
 		"title", song.Title,
@@ -134,7 +144,7 @@ func GetSongInfo(song *types.TrackInfo) error {
 		"artists", song.Artists,
 	)
 
-	if err := enrichTrack(song, resp); err != nil {
+	if err := enrichTrack(song, resp, lookupArtistGenres); err != nil {
 		return err
 	}
 

@@ -37,7 +37,7 @@ func rewriteMetadataFlag() urfave.Flag {
 
 func parallelFlag() urfave.Flag {
 	return &urfave.IntFlag{
-		Name:    "paralelism",
+		Name:    "parallelism",
 		Aliases: []string{"n"},
 		Usage:   "Amount of parallel downloads",
 		Value:   1,

@@ -5,8 +5,6 @@ import (
 	"akerraps/tunectl/internal/reader"
 	"akerraps/tunectl/internal/types"
 	"fmt"
-	"log/slog"
-	"os"
 
 	urfave "github.com/urfave/cli/v2"
 )
@@ -53,12 +51,7 @@ func fileAction(c *urfave.Context) error {
 
 	tracks, err := loadTracks(c, file)
 	if err != nil {
-		slog.Error(
-			"failed to read input file",
-			"file", file,
-			"err", err,
-		)
-		os.Exit(1)
+		return fmt.Errorf("failed to read input file %s: %w", file, err)
 	}
 
 	return fetcher.FetchAudio(tracks, opts)

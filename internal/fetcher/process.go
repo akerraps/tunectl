@@ -8,6 +8,7 @@ import (
 	"strings"
 	"unicode"
 
+	"akerraps/tunectl/internal/database"
 	"akerraps/tunectl/internal/musicbrainz"
 	"akerraps/tunectl/internal/types"
 
@@ -85,7 +86,7 @@ func processTrack(bin string, song *types.TrackInfo, opts types.Options) error {
 	if !opts.NoAPI {
 		log.Debug("fetching metadata from api")
 
-		if err := musicbrainz.GetSongInfo(song); err != nil {
+		if err := musicbrainz.GetSongInfo(song, database.GetArtistGenres); err != nil {
 			log.Warn(
 				"failed to fetch metadata, using original data",
 				"err", err,

@@ -14,9 +14,12 @@ func cacheCommand() *urfave.Command {
 
 		Flags: []urfave.Flag{
 			&urfave.BoolFlag{
-				Name:    "clear",
-				Aliases: []string{"c"},
-				Usage:   "Clear cache",
+				Name:  "ytdlp",
+				Usage: "Clear the cached yt-dlp binary",
+			},
+			&urfave.BoolFlag{
+				Name:  "db",
+				Usage: "Clear the cached metadata database (artists, albums, songs, genres)",
 			},
 		},
 
@@ -25,9 +28,24 @@ func cacheCommand() *urfave.Command {
 }
 
 func cacheAction(c *urfave.Context) error {
-	if c.Bool("clear") {
-		return cache.ClearYtDlp()
+	ytdlp := c.Bool("ytdlp")
+	db := c.Bool("db")
+
+	if !ytdlp && !db {
+		return fmt.Errorf("no valid flag provided, use --ytdlp and/or --db")
 	}
 
-	return fmt.Errorf("no valid flag provided")
+	if ytdlp {
+		if err := cache.ClearYtDlp(); err != nil {
+			return err
+		}
+	}
+
+	if db {
+		if err := cache.ClearDatabase(); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

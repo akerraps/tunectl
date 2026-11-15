@@ -102,13 +102,6 @@ func WriteDatabase(song *types.TrackInfo) error {
 	})
 }
 
-func nullIfEmpty(s string) interface{} {
-	if s == "" {
-		return nil
-	}
-	return s
-}
-
 func ExecTx(ctx context.Context, fn func(tx *sql.Tx) error) (err error) {
 	db, err := cache.OpenDatabase()
 	if err != nil {

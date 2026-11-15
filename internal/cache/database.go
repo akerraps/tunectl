@@ -4,18 +4,27 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log/slog"
+	"os"
 	"path/filepath"
 
 	_ "modernc.org/sqlite"
 )
 
-func OpenDatabase() (*sql.DB, error) {
+func databasePath() (string, error) {
 	cachePath, err := getCachePath()
 	if err != nil {
-		return nil, fmt.Errorf("cannot get cache path: %w", err)
+		return "", fmt.Errorf("cannot get cache path: %w", err)
 	}
 
-	dbPath := filepath.Join(cachePath, "tunectl.sqlite")
+	return filepath.Join(cachePath, "tunectl.sqlite"), nil
+}
+
+func OpenDatabase() (*sql.DB, error) {
+	dbPath, err := databasePath()
+	if err != nil {
+		return nil, err
+	}
 
 	db, err := sql.Open("sqlite", dbPath)
 	if err != nil {
@@ -23,6 +32,23 @@ func OpenDatabase() (*sql.DB, error) {
 	}
 
 	return db, nil
+}
+
+// ClearDatabase removes the cached metadata database (artists, albums,
+// songs and genres), so it gets recreated from scratch on next use.
+func ClearDatabase() error {
+	dbPath, err := databasePath()
+	if err != nil {
+		return err
+	}
+
+	slog.Info("removing cache database", "path", dbPath)
+
+	if err := os.Remove(dbPath); err != nil {
+		return fmt.Errorf("unable to remove %s: %w", dbPath, err)
+	}
+
+	return nil
 }
 
 func initDatabase(db *sql.DB) error {

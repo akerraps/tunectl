@@ -32,8 +32,8 @@ func buildOptions(c *urfave.Context) types.Options {
 		)
 	}
 
-	if c.IsSet("paralelism") {
-		opts.Parallelism = c.Int("paralelism")
+	if c.IsSet("parallelism") {
+		opts.Parallelism = c.Int("parallelism")
 
 		slog.Debug(
 			"overriding parallelism with CLI option",
