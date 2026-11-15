@@ -26,6 +26,11 @@ func WriteDatabase(song *types.TrackInfo) error {
 			artistIDs = append(artistIDs, id)
 		}
 
+		var primaryArtistID sql.NullInt64
+		if len(artistIDs) > 0 {
+			primaryArtistID = sql.NullInt64{Int64: artistIDs[0], Valid: true}
+		}
+
 		genreIDs := make([]int64, 0, len(song.Genres))
 		for _, genre := range song.Genres {
 			var id int64
@@ -51,35 +56,35 @@ func WriteDatabase(song *types.TrackInfo) error {
 			}
 		}
 
-		var albumArtistID sql.NullInt64
-		if len(artistIDs) > 0 {
-			albumArtistID = sql.NullInt64{Int64: artistIDs[0], Valid: true}
-		}
-		albumMBID := sql.NullString{String: song.AlbumMBID, Valid: song.AlbumMBID != ""}
+		var albumID sql.NullInt64
+		if song.Album != "" {
+			albumMBID := sql.NullString{String: song.AlbumMBID, Valid: song.AlbumMBID != ""}
 
-		var albumID int64
-		err := tx.QueryRowContext(ctx,
-			`INSERT INTO albums (name, album_mbid, artist_id) VALUES (?, ?, ?)
-			 ON CONFLICT DO UPDATE SET
-			     name = excluded.name,
-			     album_mbid = COALESCE(excluded.album_mbid, albums.album_mbid)
-			 RETURNING id;`,
-			song.Album, albumMBID, albumArtistID).Scan(&albumID)
-		if err != nil {
-			return fmt.Errorf("upsert album %q: %w", song.Album, err)
+			var id int64
+			err := tx.QueryRowContext(ctx,
+				`INSERT INTO albums (name, album_mbid, artist_id) VALUES (?, ?, ?)
+				 ON CONFLICT DO UPDATE SET
+				     name = excluded.name,
+				     album_mbid = COALESCE(excluded.album_mbid, albums.album_mbid)
+				 RETURNING id;`,
+				song.Album, albumMBID, primaryArtistID).Scan(&id)
+			if err != nil {
+				return fmt.Errorf("upsert album %q: %w", song.Album, err)
+			}
+			albumID = sql.NullInt64{Int64: id, Valid: true}
 		}
 
 		songMBID := sql.NullString{String: song.MBID, Valid: song.MBID != ""}
 
 		var songID int64
-		err = tx.QueryRowContext(ctx,
-			`INSERT INTO songs (title, mbid, album_id) VALUES (?, ?, ?)
+		err := tx.QueryRowContext(ctx,
+			`INSERT INTO songs (title, mbid, album_id, artist_id) VALUES (?, ?, ?, ?)
 			 ON CONFLICT DO UPDATE SET
 			     title = excluded.title,
 			     mbid = COALESCE(excluded.mbid, songs.mbid),
-			     album_id = excluded.album_id
+			     album_id = COALESCE(excluded.album_id, songs.album_id)
 			 RETURNING id;`,
-			song.Title, songMBID, albumID).Scan(&songID)
+			song.Title, songMBID, albumID, primaryArtistID).Scan(&songID)
 		if err != nil {
 			return fmt.Errorf("upsert song %q: %w", song.Title, err)
 		}

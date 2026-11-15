@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"time"
 
+	"akerraps/tunectl/internal/database"
 	"akerraps/tunectl/internal/types"
 
 	"github.com/michiwend/gomusicbrainz"
@@ -48,7 +49,19 @@ func enrichTrack(info *types.TrackInfo, resp *gomusicbrainz.RecordingSearchRespo
 		}
 	}
 
-	if err := getArtistInfo(info); err != nil {
+	genres, found, err := database.GetArtistGenres(info.Artists[0])
+	if err != nil {
+		log.Warn("failed to check artist cache", "artist", info.Artists[0], "err", err)
+	}
+
+	if found {
+		log.Debug(
+			"artist found in cache, skipping api lookup",
+			"artist", info.Artists[0],
+			"genres", genres,
+		)
+		info.Genres = genres
+	} else if err := getArtistInfo(info); err != nil {
 		return err
 	}
 

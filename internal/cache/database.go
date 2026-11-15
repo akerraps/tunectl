@@ -55,17 +55,19 @@ func initDatabase(db *sql.DB) error {
 			FOREIGN KEY (artist_id) REFERENCES artists(id) ON DELETE SET NULL
 		);`,
 		`CREATE UNIQUE INDEX IF NOT EXISTS idx_albums_name_artist
-			ON albums(name, artist_id);`,
+			ON albums(name, COALESCE(artist_id, 0));`,
 
 		`CREATE TABLE IF NOT EXISTS songs (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			title TEXT NOT NULL,
 			mbid TEXT UNIQUE,
 			album_id INTEGER,
-			FOREIGN KEY (album_id) REFERENCES albums(id) ON DELETE SET NULL
+			artist_id INTEGER,
+			FOREIGN KEY (album_id) REFERENCES albums(id) ON DELETE SET NULL,
+			FOREIGN KEY (artist_id) REFERENCES artists(id) ON DELETE SET NULL
 		);`,
-		`CREATE UNIQUE INDEX IF NOT EXISTS idx_songs_title_album
-			ON songs(title, album_id);`,
+		`CREATE UNIQUE INDEX IF NOT EXISTS idx_songs_title_artist_album
+			ON songs(title, COALESCE(artist_id, 0), COALESCE(album_id, 0));`,
 
 		`CREATE TABLE IF NOT EXISTS song_artists (
 			song_id INTEGER NOT NULL,
@@ -76,9 +78,9 @@ func initDatabase(db *sql.DB) error {
 		);`,
 	}
 
-	for _, stmt := range stmts {
+	for i, stmt := range stmts {
 		if _, err := db.ExecContext(ctx, stmt); err != nil {
-			return fmt.Errorf("init database: %w", err)
+			return fmt.Errorf("init database (stmt %d): %w", i, err)
 		}
 	}
 
